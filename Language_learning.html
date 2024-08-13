@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Learning Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .word-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .word {
+            padding: 10px;
+            margin: 5px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: #a0d0ff;
+        }
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #score {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Match the Words</h1>
+        <h6>How well do you know other languages?</h6>
+        <div id="englishWords" class="word-container"></div>
+        <div id="targetWords" class="word-container"></div>
+        <div id="message"></div>
+        <div id="score">Score: 0</div>
+        <button id="newGameBtn">New Game</button>
+    </div>
+
+    <script>
+        const wordPairs = {
+            isiZulu: [
+                {english: "Hello", target: "Sawubona"},
+                {english: "Goodbye", target: "Hamba kahle"},
+                {english: "Thank you", target: "Ngiyabonga"},
+                {english: "Please", target: "Ngicela"},
+                {english: "Yes", target: "Yebo"},
+                {english: "No", target: "Cha"},
+                {english: "Water", target: "Amanzi"},
+                {english: "Food", target: "Ukudla"},
+                {english: "Friend", target: "Umngani"},
+                {english: "Family", target: "Umndeni"}
+            ],
+            spanish: [
+                {english: "Hello", target: "Hola"},
+                {english: "Goodbye", target: "Adiós"},
+                {english: "Thank you", target: "Gracias"},
+                {english: "Please", target: "Por favor"},
+                {english: "Yes", target: "Sí"},
+                {english: "No", target: "No"},
+                {english: "Water", target: "Agua"},
+                {english: "Food", target: "Comida"},
+                {english: "Friend", target: "Amigo"},
+                {english: "Family", target: "Familia"}
+            ],
+            
+        };
+
+        let currentLanguage = 'isiZulu';
+        let score = 0;
+        let selectedEnglish = null;
+        let selectedTarget = null;
+        let remainingPairs = [...wordPairs[currentLanguage]];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createWordElements() {
+            const englishContainer = document.getElementById('englishWords');
+            const targetContainer = document.getElementById('targetWords');
+            
+            englishContainer.innerHTML = '';
+            targetContainer.innerHTML = '';
+
+            const shuffledEnglish = remainingPairs.map(pair => pair.english);
+            const shuffledTarget = remainingPairs.map(pair => pair.target);
+            
+            shuffleArray(shuffledEnglish);
+            shuffleArray(shuffledTarget);
+
+            shuffledEnglish.forEach(word => {
+                const div = document.createElement('div');
+                div.className = 'word';
+                div.textContent = word;
+                div.onclick = () => selectWord(div, 'english');
+                englishContainer.appendChild(div);
+            });
+
+            shuffledTarget.forEach(word => {
+                const div = document.createElement('div');
+                div.className = 'word';
+                div.textContent = word;
+                div.onclick = () => selectWord(div, 'target');
+                targetContainer.appendChild(div);
+            });
+        }
+
+        function selectWord(element, language) {
+            if (language === 'english') {
+                if (selectedEnglish) selectedEnglish.classList.remove('selected');
+                selectedEnglish = element;
+            } else {
+                if (selectedTarget) selectedTarget.classList.remove('selected');
+                selectedTarget = element;
+            }
+            element.classList.add('selected');
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (selectedEnglish && selectedTarget) {
+                const englishWord = selectedEnglish.textContent;
+                const targetWord = selectedTarget.textContent;
+                const isMatch = remainingPairs.some(pair => 
+                    pair.english === englishWord && pair.target === targetWord);
+                
+                const messageElement = document.getElementById('message');
+                if (isMatch) {
+                    messageElement.textContent = "Correct!";
+                    messageElement.style.color = "green";
+                    score++;
+                    document.getElementById('score').textContent = `Score: ${score}`;
+                    remainingPairs = remainingPairs.filter(pair => 
+                        pair.english !== englishWord && pair.target !== targetWord);
+                    selectedEnglish.style.display = 'none';
+                    selectedTarget.style.display = 'none';
+                } else {
+                    messageElement.textContent = "Try again!";
+                    messageElement.style.color = "red";
+                }
+
+                selectedEnglish.classList.remove('selected');
+                selectedTarget.classList.remove('selected');
+                selectedEnglish = null;
+                selectedTarget = null;
+
+                if (remainingPairs.length === 0) {
+                    messageElement.textContent = "Congratulations! You've matched all words!";
+                    messageElement.style.color = "green";
+                }
+            }
+        }
+
+        function newGame() {
+            currentLanguage = currentLanguage === 'isiZulu' ? 'spanish' : 'isiZulu';
+            score = 0;
+            document.getElementById('score').textContent = "Score: 0";
+            document.getElementById('message').textContent = "";
+            remainingPairs = [...wordPairs[currentLanguage]];
+            createWordElements();
+        }
+
+        document.getElementById('newGameBtn').onclick = newGame;
+
+        createWordElements();
+    </script>
+</body>
+</html>
